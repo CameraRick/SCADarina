@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<title>SCADarina</title>
+	<link rel="icon" type="image/x-icon" href="/favicon.ico">
+	<link rel="stylesheet" href="/static/css/style.css">
+
+	<script type="importmap">
+    {
+      "imports": {
+        "three": "/static/js/vendor/three.module.js",
+        "three/addons/": "/static/js/vendor/",
+        "fflate": "/static/js/vendor/libs/fflate.module.js"
+      }
+    }
+  </script>
+</head>
+
+<body>
+	<div id="top-header" class="toolbar">
+		<div class="toolbar-row">
+			<div class="toolbar-group-left">
+				<label class="btn" title="choose a local SCAD, STL, OBJ or 3MF file to view or edit">open file<input
+						type="file" id="fileInput" accept=".scad,.stl,.obj,.3mf"></label>
+				<button id="saveServerBtn" title="save editor contents as a new .scad file to the server">save to
+					/models</button>
+			</div>
+			<div class="toolbar-group-right">
+				<button id="renderBtn" title="compile OpenSCAD code with CGAL to compute full geometry">full
+					render</button>
+				<button id="downloadBtn" title="download current geometry as binary STL file">export STL</button>
+			</div>
+		</div>
+		<div class="toolbar-row" style="justify-content: flex-end;">
+			<label class="toolbar-checkbox-label"
+				title="save an additional STL copy into /models/_export when exporting">
+				<input type="checkbox" id="saveCopyServerChk">
+				<span>save copy to /models</span>
+			</label>
+		</div>
+	</div>
+
+	<div id="code-toggle-bar">
+		<button id="toggleParamsBtn" title="toggle parameters and models panel">hide parameters</button>
+		<button id="toggleCodeBtn" title="toggle OpenSCAD source editor panel">show code</button>
+	</div>
+
+	<div id="sidebar-left">
+		<div id="sidebar-params">
+				<div class="header-bar">
+					<span>| parameters</span>
+					<span id="file-title" style="color: #888888; font-size: 10px; text-transform: none;">standard</span>
+				</div>
+
+				<div id="controls-container">
+					<span style="color:#888888; font-size:11px; padding: 4px;">no parameters detected.</span>
+				</div>
+
+				<div id="models-resizer" title="drag to resize"></div>
+
+				<div id="models-panel">
+					<div class="header-bar">
+						<span id="modelsCurrentPath"
+							style="text-transform: none; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/models</span>
+						<div style="display: flex; align-items: center; gap: 4px;">
+							<label class="file-action-btn" title="upload files directly into this server directory"
+								style="cursor: pointer; margin: 0;">
+								<span class="btn-icon"
+									style="-webkit-mask-image: url(/svg/upload.svg); mask-image: url(/svg/upload.svg);"></span>
+								<input type="file" id="modelsFolderUploadInput" accept=".scad,.stl,.obj,.3mf"
+									style="display: none;">
+							</label>
+							<button id="newFolderBtn" class="file-action-btn" title="create a new directory here">
+								<span class="btn-icon"
+									style="-webkit-mask-image: url(/svg/newfolder.svg); mask-image: url(/svg/newfolder.svg);"></span>
+							</button>
+							<button id="refreshModelsBtn" class="file-action-btn"
+								title="reload folder list from server">
+								<span class="btn-icon"
+									style="-webkit-mask-image: url(/svg/refresh.svg); mask-image: url(/svg/refresh.svg);"></span>
+							</button>
+						</div>
+					</div>
+					<ul id="models-list"></ul>
+				</div>
+				<div id="sidebar-left-resizer" title="drag to resize parameters sidebar"></div>
+			</div>
+		</div>
+
+	<div id="sidebar-right">
+		<div id="sidebar-right-resizer" title="drag to resize code editor"></div>
+		<div class="header-bar">
+			<span>| OpenSCAD Code</span>
+		</div>
+		<div id="editor-container">
+				<div id="editor-gutter"></div>
+				<textarea id="editor" spellcheck="false">// teeth count
+teeth = 69; // [10:1:300]
+
+// inner diameter
+inner_diameter = 42.0; // [text]
+
+// gear width
+gear_wth = 12.0; // [text]
+
+// chamfer teeth?
+chamfer_T = true;
+
+// chamfer inside?
+chamfer_ID = true;
+
+// chamfer size
+chamfer_val = 0.4;
+
+// tooth facet resolution (preview/draft)
+involute_facets = 2;
+
+/* [Hidden] */
+$fs = 0.5;
+$fa = 2;
+pi = 3.1415926535897932384626433832795;
+
+module gear(
+	teeth = 15,
+	circular_pitch = false,
+	diametral_pitch = 31.75,
+	module_number = false,
+	pressure_angle = 20,
+	clearance = 0.7,
+	gear_wth = 5,
+	rim_thickness = 8,
+	rim_width = 5,
+	hub_thickness = 10,
+	hub_diameter = 15,
+	inner_diameter = 5,
+	circles = 0,
+	backlash = 0,
+	twist = 0,
+	involute_facets = 16,
+	no_bore = false
+) {
+	dp = (diametral_pitch != false) ? diametral_pitch : (module_number != false ? 25.4 / module_number : 31.75);
+	pitch_diameter = (teeth / dp) * 25.4;
+	pitch_radius = pitch_diameter / 2;
+	base_radius = pitch_radius * cos(pressure_angle);
+	pitch_diametrial = teeth / pitch_diameter;
+	addendum = 1 / pitch_diametrial;
+	outer_radius = pitch_radius + addendum;
+	dedendum = addendum + clearance;
+	root_radius = pitch_radius - dedendum;
+	backlash_angle = backlash / pitch_radius * 180 / pi;
+	half_thick_angle = (360 / teeth - backlash_angle) / 4;
+	rim_radius = root_radius - rim_width;
+
+	circle_orbit_diameter = hub_diameter / 2 + rim_radius;
+	circle_orbit_curcumference = pi * circle_orbit_diameter;
+	circle_diameter = min(
+		0.70 * circle_orbit_curcumference / max(1, circles),
+		(rim_radius - hub_diameter / 2) * 0.9
+	);
+
+	difference() {
+
+		difference() {
+			linear_extrude(height = rim_thickness, convexity = 10, twist = twist)
+			gear_shape(
+				teeth,
+				pitch_radius = pitch_radius,
+				root_radius = root_radius,
+				base_radius = base_radius,
+				outer_radius = outer_radius,
+				half_thick_angle = half_thick_angle,
+				involute_facets = involute_facets
+			);
+
+			if (!no_bore) {
+				translate([0, 0, -1])
+				cylinder(
+					r = inner_diameter / 2,
+					h = rim_thickness + 2
+				);
+			}
+
+			if (chamfer_ID && chamfer_val > 0) {
+				translate([0, 0, rim_thickness - chamfer_val])
+					cylinder(h = chamfer_val + 0.1, r1 = inner_diameter / 2, r2 = inner_diameter / 2 + chamfer_val);
+				translate([0, 0, -0.1])
+					cylinder(h = chamfer_val + 0.1, r1 = inner_diameter / 2 + chamfer_val, r2 = inner_diameter / 2);
+			}
+		}
+
+		if (chamfer_T) {
+			ch_t = 1.8;
+			translate([0, 0, rim_thickness - ch_t]) {
+				difference() {
+					cylinder(h = ch_t + 0.1, r = outer_radius + 5);
+					cylinder(h = ch_t + 0.1, r1 = outer_radius, r2 = outer_radius - ch_t - 0.1);
+				}
+			}
+			translate([0, 0, -0.1]) {
+				difference() {
+					cylinder(h = ch_t + 0.1, r = outer_radius + 5);
+					cylinder(h = ch_t + 0.1, r1 = outer_radius - ch_t - 0.1, r2 = outer_radius);
+				}
+			}
+		}
+	}
+}
+
+module gear_shape(
+	teeth,
+	pitch_radius,
+	root_radius,
+	base_radius,
+	outer_radius,
+	half_thick_angle,
+	involute_facets
+) {
+	union() {
+		rotate(half_thick_angle) circle($fn = teeth * 2, r = root_radius);
+
+		for (i = [1 : teeth]) {
+			rotate([0, 0, i * 360 / teeth]) {
+				involute_gear_tooth(
+					pitch_radius = pitch_radius,
+					root_radius = root_radius,
+					base_radius = base_radius,
+					outer_radius = outer_radius,
+					half_thick_angle = half_thick_angle,
+					involute_facets = involute_facets
+				);
+			}
+		}
+	}
+}
+
+module involute_gear_tooth(
+	pitch_radius,
+	root_radius,
+	base_radius,
+	outer_radius,
+	half_thick_angle,
+	involute_facets
+) {
+	min_radius = max(base_radius, root_radius);
+
+	pitch_point = involute(base_radius, involute_intersect_angle(base_radius, pitch_radius));
+	pitch_angle = atan2(pitch_point[1], pitch_point[0]);
+	centre_angle = pitch_angle + half_thick_angle;
+
+	start_angle = involute_intersect_angle(base_radius, min_radius);
+	stop_angle = involute_intersect_angle(base_radius, outer_radius);
+
+	res = (involute_facets != 0) ? involute_facets : $fn;
+
+	union() {
+		for (i = [1 : res]) {
+			let(
+				point1 = involute(base_radius, start_angle + (stop_angle - start_angle) * (i - 1) / res),
+				point2 = involute(base_radius, start_angle + (stop_angle - start_angle) * i / res),
+				side1_point1 = rotate_point(centre_angle, point1),
+				side1_point2 = rotate_point(centre_angle, point2),
+				side2_point1 = mirror_point(rotate_point(centre_angle, point1)),
+				side2_point2 = mirror_point(rotate_point(centre_angle, point2))
+			) {
+				polygon(
+					points = [[0, 0], side1_point1, side1_point2, side2_point2, side2_point1],
+					paths = [[0, 1, 2, 3, 4, 0]]
+				);
+			}
+		}
+	}
+}
+
+function involute_intersect_angle(base_radius, radius) = sqrt(pow(radius / base_radius, 2) - 1) * 180 / pi;
+
+function rotated_involute(rotate, base_radius, involute_angle) = [
+	cos(rotate) * involute(base_radius, involute_angle)[0] + sin(rotate) * involute(base_radius, involute_angle)[1],
+	cos(rotate) * involute(base_radius, involute_angle)[1] - sin(rotate) * involute(base_radius, involute_angle)[0]
+];
+
+function mirror_point(coord) = [coord[0], -coord[1]];
+
+function rotate_point(rotate, coord) = [
+	cos(rotate) * coord[0] + sin(rotate) * coord[1],
+	cos(rotate) * coord[1] - sin(rotate) * coord[0]
+];
+
+function involute(base_radius, involute_angle) = [
+	base_radius * (cos(involute_angle) + involute_angle * pi / 180 * sin(involute_angle)),
+	base_radius * (sin(involute_angle) - involute_angle * pi / 180 * cos(involute_angle))
+];
+
+gear(
+	diametral_pitch = 31.75,
+	clearance = 0.2,
+	teeth = teeth,
+	inner_diameter = inner_diameter,
+	rim_thickness = gear_wth,
+	gear_wth = gear_wth,
+	hub_thickness = 0,
+	circles = 0,
+	involute_facets = involute_facets
+);
+</textarea>
+			</div>
+		</div>
+
+		<div id="viewport-container">
+			<div id="viewport-tools">
+				<div class="tool-group">
+					<button id="modeSolidBtn" title="render solid surface without wireframe">solid</button>
+					<button id="modeEdgesBtn" class="active-mode"
+						title="render solid surface with visible edge lines">edges</button>
+					<button id="modeMeshBtn"
+						title="render solid surface with triangular mesh wireframe overlay">mesh</button>
+					<button id="modeWireframeBtn" title="render triangular mesh wireframe only">wireframe</button>
+				</div>
+
+				<button id="toggleGridBtn" class="active-tool" title="cycle viewport helper: grid / axes / off">grid</button>
+
+				<button id="toggleMeasureBtn"
+					title="click two vertices to measure distance and XYZ deltas">measure</button>
+			</div>
+
+			<div id="measure-readout"></div>
+			<div id="status"></div>
+
+			<div id="scale-indicator">
+				<div id="scale-bar"></div>
+				<div id="scale-label">—</div>
+			</div>
+
+			<div id="viewcube-wrap">
+				<div id="viewcube-box">
+					<canvas id="viewcube-canvas" title="click face, edge, or corner to snap view"></canvas>
+					<button id="vc-arrow-up" class="vc-arrow vc-arrow-up" title="tilt up">▲</button>
+					<button id="vc-arrow-down" class="vc-arrow vc-arrow-down" title="tilt down">▼</button>
+					<button id="vc-arrow-left" class="vc-arrow vc-arrow-left" title="turn left">◀</button>
+					<button id="vc-arrow-right" class="vc-arrow vc-arrow-right" title="turn right">▶</button>
+				</div>
+				<div id="viewcube-sub">
+					<button id="toggleOrthoBtn"
+						title="toggle orthographic / perspective projection">perspective</button>
+				</div>
+			</div>
+		</div>
+
+	<script type="module" src="/static/js/app.js"></script>
+</body>
+
+</html>
