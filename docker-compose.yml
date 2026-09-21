@@ -1,0 +1,15 @@
+services:
+  scadarina:
+    container_name: SCADarina
+    build:
+      context: ./scadarina
+      dockerfile: Dockerfile
+    image: scadarina:latest
+    restart: unless-stopped
+    ports:
+      - "5343:5000"
+    volumes:
+      - ./scadarina/models:/app/models
+      - ./scadarina/libraries:/root/.local/share/OpenSCAD/libraries
+    labels:
+      net.unraid.docker.icon: "https://raw.githubusercontent.com/placeholder/icon.png"
