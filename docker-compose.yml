@@ -12,4 +12,4 @@ services:
       - ./scadarina/models:/app/models
       - ./scadarina/libraries:/root/.local/share/OpenSCAD/libraries
     labels:
-      net.unraid.docker.icon: "https://raw.githubusercontent.com/placeholder/icon.png"
+      net.unraid.docker.icon: "https://raw.githubusercontent.com/CameraRick/SCADarina/refs/heads/main/img/logo/png/scadarina_512.png"
