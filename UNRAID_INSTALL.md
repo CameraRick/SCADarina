@@ -23,6 +23,7 @@ mkdir -p /mnt/user/appdata/scadarina/models /mnt/user/appdata/scadarina/librarie
   <Network>bridge</Network>
   <Category>Tools: Productivity:</Category>
   <WebUI>http://[IP]:[PORT:5343]</WebUI>
+  <Icon>https://raw.githubusercontent.com/CameraRick/SCADarina/refs/heads/main/img/logo/png/scadarina_512.png</Icon>
   <ExtraParams>--restart unless-stopped</ExtraParams>
   <Config Name="WebUI Port" Target="5000" Default="5343" Mode="tcp" Description="" Type="Port" Display="always" Required="true" Mask="false">5343</Config>
   <Config Name="models" Target="/app/models" Default="/mnt/user/appdata/scadarina/models" Mode="rw" Description="uploaded files, and files saved through the GUI" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/scadarina/models</Config>
