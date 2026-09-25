@@ -4,6 +4,8 @@ import uuid
 import json
 from flask import Flask, request, jsonify, send_file, render_template, send_from_directory
 
+APP_VERSION = "1.1"
+
 app = Flask(__name__)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -207,7 +209,13 @@ def render_scad():
     with open(scad_path, "w", encoding="utf-8") as f:
         f.write(code)
 
-    cmd = ["openscad", scad_path, "-o", stl_path]
+    version_mode = os.environ.get("OPENSCAD_VERSION", "stable").strip().lower()
+    if version_mode == "nightly" and os.path.exists("/usr/bin/openscad-nightly"):
+        cmd = ["openscad-nightly", "--enable=manifold", scad_path, "-o", stl_path]
+    elif version_mode == "nightly" and os.path.exists("/usr/local/bin/openscad-nightly"):
+        cmd = ["/usr/local/bin/openscad-nightly", "--enable=manifold", scad_path, "-o", stl_path]
+    else:
+        cmd = ["openscad", scad_path, "-o", stl_path]
 
     for k, v in params.items():
         if isinstance(v, bool):
