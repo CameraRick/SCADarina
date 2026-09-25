@@ -9,7 +9,7 @@ style="max-width: 70%;" />
 <img src="img/screenshots/scadarina_02.png"
 style="max-width: 70%;" />
 
-_you can find more screenshots under `[/img/screenshots](img/screenshots/)`_
+_you can find more screenshots under [/img/screenshots/](img/screenshots/)_
 
 ---
 
