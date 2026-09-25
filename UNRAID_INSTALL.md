@@ -26,6 +26,7 @@ mkdir -p /mnt/user/appdata/scadarina/models /mnt/user/appdata/scadarina/librarie
   <Icon>https://raw.githubusercontent.com/CameraRick/SCADarina/refs/heads/main/img/logo/png/scadarina_512.png</Icon>
   <ExtraParams>--restart unless-stopped</ExtraParams>
   <Config Name="WebUI Port" Target="5000" Default="5343" Mode="tcp" Description="" Type="Port" Display="always" Required="true" Mask="false">5343</Config>
+  <Config Name="OpenSCAD Version" Target="OPENSCAD_VERSION" Default="stable" Mode="" Description="Choose 'nightly' (fast Manifold engine) or 'stable' (classic CGAL engine)" Type="Variable" Display="always" Required="false" Mask="false">stable</Config>
   <Config Name="models" Target="/app/models" Default="/mnt/user/appdata/scadarina/models" Mode="rw" Description="uploaded files, and files saved through the GUI" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/scadarina/models</Config>
   <Config Name="libraries" Target="/root/.local/share/OpenSCAD/libraries" Default="/mnt/user/appdata/scadarina/libraries" Mode="rw" Description="external libraries and dependencies" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/scadarina/libraries</Config>
 </Container>
