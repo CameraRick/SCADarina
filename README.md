@@ -4,10 +4,12 @@ a self-hosted docker container for your personal OpenSCAD generator and model vi
 
 ---
 
-<img src="img/screenshots/scadarina_01.png" 
-     style="max-width: 70%;" />
-<img src="img/screenshots/scadarina_02.png" 
-     style="max-width: 70%;" />
+<img src="img/screenshots/scadarina_01.png"
+style="max-width: 70%;" />
+<img src="img/screenshots/scadarina_02.png"
+style="max-width: 70%;" />
+
+_you can find more screenshots under `[/img/screenshots](img/screenshots/)`_
 
 ---
 
@@ -21,6 +23,22 @@ It parses OpenSCAD controls (like you'd see on one of those online generators), 
 - a rudimentary file browser: you can create folders, upload and delete files, or save your current settings
 - works on mobile browsers (but I probably have to spend some time improving on that, haha)
 - has no online dependencies: you can use it offline
+
+`SCADarina` is **not** WASM. Under the hood, it uses a real `OpenSCAD` backend which runs entirely on the server. This means full support for external libraries, and no bottlenecks from your browser (even on mobile).
+.scad files are sent to a `python-flask-backend`, `OpenSCAD` renders it to a mesh, and this result gets dislayed in the `Three.js` viewport in your browser.
+
+Since **v1.1**, you can choose between `stable` and `nightly` builds of `OpenSCAD`. With `nightly`, the very fast `manifold engine` is used. As this can lead to issues with non-manifold designs, this is not the default; as it is really much faster, I would at least try it out. Switching back to `stable` is as easy as changing the variable in the docker, if you have issues :)
+
+---
+
+## Changelog
+
+**v1.1** - 25.09.2026
+- **New Feature:** Toggle the "up"-axis (choose between `Z is up` / `Y is up`) to correct models created in different systems
+- **New Feature:** support for faster `manifold engine` rendering through `OpenSCAD Nightly`; you can adjust this in the [docker compose](docker-compose.yml)
+- mesh-models (STL, OBJ, 3MF) are now automatically grounded onto the grid / axis
+
+**v1 - initial release** - 21.09.2026
 
 ---
 
