@@ -17,6 +17,7 @@ let toggleGridBtn = null;
 let toggleMeasureBtn = null;
 let measureReadout = null;
 let toggleOrthoBtn = null;
+let toggleUpAxisBtn = null;
 let fitBtn = null;
 let fitBtn2 = null;
 let scaleBar = null;
@@ -30,9 +31,12 @@ let currentShadingMode = 'edges';
 let isMeasuring = false;
 let measurePoints = [];
 let isOrtho = false;
+let upAxis = 'Z'; // 'Z' | 'Y'
+let isCurrentMeshFile = false;
 let helperMode = 'grid'; // 'grid' | 'axes' | 'off'
 let gridHelperObj = null;
 let axesHelperObj = null;
+let updateViewCubeAndAxesForUpAxis = () => {};
 
 let scene, renderer, perspCamera, orthoCamera, camera, controls, orthoControls;
 const raycaster = new THREE.Raycaster();
@@ -52,6 +56,7 @@ export function initViewer(elements) {
   toggleMeasureBtn = elements.toggleMeasureBtn;
   measureReadout = elements.measureReadout;
   toggleOrthoBtn = elements.toggleOrthoBtn;
+  toggleUpAxisBtn = elements.toggleUpAxisBtn;
   fitBtn = elements.fitBtn;
   fitBtn2 = elements.fitBtn2;
   const isoBtn = elements.isoBtn || elements.fitBtn2 || elements.fitBtn;
@@ -134,6 +139,10 @@ export function initViewer(elements) {
   if (fitBtn && fitBtn !== isoBtn) fitBtn.addEventListener('click', isoView);
   if (fitBtn2 && fitBtn2 !== isoBtn) fitBtn2.addEventListener('click', isoView);
   if (toggleOrthoBtn) toggleOrthoBtn.addEventListener('click', toggleOrtho);
+  if (toggleUpAxisBtn) {
+    toggleUpAxisBtn.textContent = 'Z is up';
+    toggleUpAxisBtn.addEventListener('click', toggleUpAxis);
+  }
 
   window.addEventListener('resize', onResize);
   const ro = new ResizeObserver(() => {
@@ -212,13 +221,13 @@ function createOpenScadAxes(maxRange = 400) {
       dir: new THREE.Vector3(0, 1, 0),
       tickDir: new THREE.Vector3(1, 0, 0),
       rot: new THREE.Euler(0, 0, Math.PI / 2),
-      name: '+Y'
+      name: (upAxis === 'Y' ? '+Z' : '+Y')
     },
     {
       dir: new THREE.Vector3(0, 0, 1),
       tickDir: new THREE.Vector3(1, 0, 0),
       rot: new THREE.Euler(Math.PI / 2, 0, Math.PI / 2),
-      name: '+Z'
+      name: (upAxis === 'Y' ? '+Y' : '+Z')
     }
   ];
 
@@ -450,11 +459,19 @@ function onPointerDown(e) {
     measureGroup.add(createSnapMarker(snapPos));
 
     if (measurePoints.length === 1) {
-      measureReadout.innerHTML = `
-        Point 1 set:<br>
-        <span style="color:#888;">X: ${snapPos.x.toFixed(2)} | Y: ${snapPos.y.toFixed(2)} | Z: ${snapPos.z.toFixed(2)}</span><br>
-        Click point 2.
-      `;
+      if (upAxis === 'Y') {
+        measureReadout.innerHTML = `
+          Point 1 set:<br>
+          <span style="color:#888;">X: ${snapPos.x.toFixed(2)} | Z: ${snapPos.y.toFixed(2)} | Y: ${snapPos.z.toFixed(2)}</span><br>
+          Click point 2.
+        `;
+      } else {
+        measureReadout.innerHTML = `
+          Point 1 set:<br>
+          <span style="color:#888;">X: ${snapPos.x.toFixed(2)} | Y: ${snapPos.y.toFixed(2)} | Z: ${snapPos.z.toFixed(2)}</span><br>
+          Click point 2.
+        `;
+      }
     } else if (measurePoints.length === 2) {
       const p1 = measurePoints[0];
       const p2 = measurePoints[1];
@@ -477,24 +494,42 @@ function onPointerDown(e) {
         return l;
       }
 
-      measureGroup.add(createAxisLine(p1, corner1, 0xff3b30));     // X
-      measureGroup.add(createAxisLine(corner1, corner2, 0x34c759)); // Y
-      measureGroup.add(createAxisLine(corner2, p2, 0x007aff));      // Z
-
       const dist = p1.distanceTo(p2);
       const dx = Math.abs(p2.x - p1.x);
-      const dy = Math.abs(p2.y - p1.y);
-      const dz = Math.abs(p2.z - p1.z);
+      const dyWorld = Math.abs(p2.y - p1.y);
+      const dzWorld = Math.abs(p2.z - p1.z);
 
-      measureReadout.innerHTML = `
-        <strong style="color:#ffffff; font-size:13px;">Distance: ${dist.toFixed(3)} mm</strong><br>
-        <div style="margin-top:4px; border-top:1px solid #333333; padding-top:4px; font-family:monospace;">
-          <span class="axis-x">ΔX:</span> ${dx.toFixed(3)} mm<br>
-          <span class="axis-y">ΔY:</span> ${dy.toFixed(3)} mm<br>
-          <span class="axis-z">ΔZ:</span> ${dz.toFixed(3)} mm
-        </div>
-        <div style="font-size:10px; color:#666666; margin-top:4px;">Click again to remeasure</div>
-      `;
+      if (upAxis === 'Y') {
+        // In Y-up: World Y is +Z (color 0x007aff blue), World Z is +Y (color 0x34c759 green)
+        measureGroup.add(createAxisLine(p1, corner1, 0xff3b30));     // X
+        measureGroup.add(createAxisLine(corner1, corner2, 0x007aff)); // Z axis (World Y)
+        measureGroup.add(createAxisLine(corner2, p2, 0x34c759));      // Y axis (World Z)
+
+        measureReadout.innerHTML = `
+          <strong style="color:#ffffff; font-size:13px;">Distance: ${dist.toFixed(3)} mm</strong><br>
+          <div style="margin-top:4px; border-top:1px solid #333333; padding-top:4px; font-family:monospace;">
+            <span class="axis-x">ΔX:</span> ${dx.toFixed(3)} mm<br>
+            <span class="axis-y" style="color:#34c759">ΔY:</span> ${dzWorld.toFixed(3)} mm<br>
+            <span class="axis-z" style="color:#007aff">ΔZ:</span> ${dyWorld.toFixed(3)} mm
+          </div>
+          <div style="font-size:10px; color:#666666; margin-top:4px;">Click again to remeasure</div>
+        `;
+      } else {
+        // In Z-up: World Y is +Y (green), World Z is +Z (blue)
+        measureGroup.add(createAxisLine(p1, corner1, 0xff3b30));     // X
+        measureGroup.add(createAxisLine(corner1, corner2, 0x34c759)); // Y
+        measureGroup.add(createAxisLine(corner2, p2, 0x007aff));      // Z
+
+        measureReadout.innerHTML = `
+          <strong style="color:#ffffff; font-size:13px;">Distance: ${dist.toFixed(3)} mm</strong><br>
+          <div style="margin-top:4px; border-top:1px solid #333333; padding-top:4px; font-family:monospace;">
+            <span class="axis-x">ΔX:</span> ${dx.toFixed(3)} mm<br>
+            <span class="axis-y" style="color:#34c759">ΔY:</span> ${dyWorld.toFixed(3)} mm<br>
+            <span class="axis-z" style="color:#007aff">ΔZ:</span> ${dzWorld.toFixed(3)} mm
+          </div>
+          <div style="font-size:10px; color:#666666; margin-top:4px;">Click again to remeasure</div>
+        `;
+      }
     }
   }
 }
@@ -518,8 +553,9 @@ export function clearScene() {
   resetMeasurement();
 }
 
-export function displayGeometry(geometryOrGroup, isPreview = false) {
+export function displayGeometry(geometryOrGroup, isPreview = false, isMeshFile = false) {
   clearScene();
+  isCurrentMeshFile = isMeshFile;
 
   const baseColor = 0xf9d72c;
   const meshColor = customModelColor ? customModelColor : baseColor;
@@ -553,11 +589,6 @@ export function displayGeometry(geometryOrGroup, isPreview = false) {
     currentWireframeOverlay = new THREE.LineSegments(wireGeometry, wireMaterial);
     currentWireframeOverlay.visible = (currentShadingMode === 'mesh');
     scene.add(currentWireframeOverlay);
-
-    geometry.computeBoundingSphere();
-    if (geometry.boundingSphere) {
-      controls.target.copy(geometry.boundingSphere.center);
-    }
   } else {
     const group = geometryOrGroup;
     currentMesh = group;
@@ -600,12 +631,9 @@ export function displayGeometry(geometryOrGroup, isPreview = false) {
     currentWireframeOverlay = allWire;
     currentWireframeOverlay.visible = (currentShadingMode === 'mesh');
     scene.add(currentWireframeOverlay);
-
-    const box = new THREE.Box3().setFromObject(group);
-    const center = new THREE.Vector3();
-    box.getCenter(center);
-    controls.target.copy(center);
   }
+
+  applyMeshTransformAndPlacement();
 }
 
 export function getModelCenter() {
@@ -684,6 +712,49 @@ export function toggleOrtho() {
     controls.target.copy(orthoControls.target);
     controls.update();
   }
+}
+
+function applyMeshTransformAndPlacement() {
+  if (!currentMesh) return;
+
+  const meshes = [currentMesh, currentEdgesMesh, currentWireframeOverlay].filter(Boolean);
+
+  meshes.forEach(m => {
+    m.position.set(0, 0, 0);
+    m.rotation.set(0, 0, 0);
+    if (upAxis === 'Y') {
+      m.rotation.x = Math.PI / 2;
+    }
+    m.updateMatrixWorld(true);
+  });
+
+  const box = new THREE.Box3().setFromObject(currentMesh);
+  let center = new THREE.Vector3();
+  box.getCenter(center);
+
+  if (isCurrentMeshFile && isFinite(box.min.z)) {
+    const offsetZ = -box.min.z;
+    meshes.forEach(m => {
+      m.position.z += offsetZ;
+      m.updateMatrixWorld(true);
+    });
+    center.z += offsetZ;
+  }
+
+  controls.target.copy(center);
+  orthoControls.target.copy(center);
+  controls.update();
+  orthoControls.update();
+}
+
+export function toggleUpAxis() {
+  upAxis = (upAxis === 'Z') ? 'Y' : 'Z';
+  if (toggleUpAxisBtn) {
+    toggleUpAxisBtn.textContent = `${upAxis} is up`;
+  }
+  applyMeshTransformAndPlacement();
+  resetMeasurement();
+  updateViewCubeAndAxesForUpAxis();
 }
 
 function updateScaleIndicator() {
@@ -1012,17 +1083,20 @@ function initViewCube() {
 
   const interactiveObjects = [...cornerMeshes, ...edgeMeshes, ...facePlanes];
 
+  const vcMiniAxes = [];
   const axes = [
-    { from: [0, 0, 0], to: [1.25, 0, 0], color: 0xff3b30 },
-    { from: [0, 0, 0], to: [0, -1.25, 0], color: 0x34c759 },
-    { from: [0, 0, 0], to: [0, 0, 1.25], color: 0x007aff },
+    { from: [0, 0, 0], to: [1.25, 0, 0], color: 0xff3b30, id: 'X' },
+    { from: [0, 0, 0], to: [0, -1.25, 0], color: 0x34c759, id: 'Y' },
+    { from: [0, 0, 0], to: [0, 0, 1.25], color: 0x007aff, id: 'Z' },
   ];
-  axes.forEach(({ from, to, color }) => {
+  axes.forEach(({ from, to, color, id }) => {
     const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...from), new THREE.Vector3(...to)]);
     const mat = new THREE.LineBasicMaterial({ color, linewidth: 3, depthTest: false, transparent: true });
     const line = new THREE.Line(geo, mat);
     line.renderOrder = 9999;
+    line.userData.axisId = id;
     vcScene.add(line);
+    vcMiniAxes.push(line);
   });
 
   const vcRaycaster = new THREE.Raycaster();
@@ -1128,5 +1202,27 @@ function initViewCube() {
     activeCam.lookAt(0, 0, 0);
     vcRenderer.render(vcScene, activeCam);
   }
+  updateViewCubeAndAxesForUpAxis = function() {
+    // Recreate openSCAD axes
+    if (axesHelperObj) {
+      const wasVisible = axesHelperObj.visible;
+      scene.remove(axesHelperObj);
+      axesHelperObj = createOpenScadAxes(400);
+      axesHelperObj.visible = wasVisible;
+      scene.add(axesHelperObj);
+    }
+
+    // Update mini axes colors on viewcube
+    vcMiniAxes.forEach(line => {
+      if (line.userData.axisId === 'X') {
+        line.material.color.setHex(0xff3b30);
+      } else if (line.userData.axisId === 'Y') {
+        line.material.color.setHex(upAxis === 'Y' ? 0x007aff : 0x34c759);
+      } else if (line.userData.axisId === 'Z') {
+        line.material.color.setHex(upAxis === 'Y' ? 0x34c759 : 0x007aff);
+      }
+    });
+  };
+
   animateVc();
 }

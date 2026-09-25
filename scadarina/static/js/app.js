@@ -57,6 +57,7 @@ const toggleGridBtn = document.getElementById('toggleGridBtn');
 const toggleMeasureBtn = document.getElementById('toggleMeasureBtn');
 const measureReadout = document.getElementById('measure-readout');
 const toggleOrthoBtn = document.getElementById('toggleOrthoBtn');
+const toggleUpAxisBtn = document.getElementById('toggleUpAxisBtn');
 const scaleBar = document.getElementById('scale-bar');
 const scaleLabel = document.getElementById('scale-label');
 const fileInput = document.getElementById('fileInput');
@@ -200,7 +201,7 @@ async function openServerModel(relPath, displayFilename) {
       latestStlBlob = await res.blob();
       const buffer = await latestStlBlob.arrayBuffer();
       const geometry = loader.parse(buffer);
-      displayGeometry(geometry, false);
+      displayGeometry(geometry, false, true);
       isFullRenderAvailable = true;
       setStatus(`${displayFilename} loaded.`, false, false);
       return;
@@ -209,7 +210,7 @@ async function openServerModel(relPath, displayFilename) {
       latestStlBlob = null;
       const text = await res.text();
       const group = objLoader.parse(text);
-      displayGeometry(group, false);
+      displayGeometry(group, false, true);
       isFullRenderAvailable = false;
       setStatus(`${displayFilename} loaded.`, false, false);
       return;
@@ -218,7 +219,7 @@ async function openServerModel(relPath, displayFilename) {
       latestStlBlob = null;
       const buffer = await res.arrayBuffer();
       const group = threeMFLoader.parse(buffer);
-      displayGeometry(group, false);
+      displayGeometry(group, false, true);
       isFullRenderAvailable = false;
       setStatus(`${displayFilename} loaded.`, false, false);
       return;
@@ -294,7 +295,7 @@ fileInput.addEventListener('change', (e) => {
     reader.onload = (evt) => {
       latestStlBlob = new Blob([evt.target.result], { type: 'application/sla' });
       const geometry = loader.parse(evt.target.result);
-      displayGeometry(geometry, false);
+      displayGeometry(geometry, false, true);
       isFullRenderAvailable = true;
       setStatus(`${file.name} loaded.`, false, false);
     };
@@ -306,7 +307,7 @@ fileInput.addEventListener('change', (e) => {
     const reader = new FileReader();
     reader.onload = (evt) => {
       const group = objLoader.parse(evt.target.result);
-      displayGeometry(group, false);
+      displayGeometry(group, false, true);
       isFullRenderAvailable = false;
       setStatus(`${file.name} loaded.`, false, false);
     };
@@ -318,7 +319,7 @@ fileInput.addEventListener('change', (e) => {
     const reader = new FileReader();
     reader.onload = (evt) => {
       const group = threeMFLoader.parse(evt.target.result);
-      displayGeometry(group, false);
+      displayGeometry(group, false, true);
       isFullRenderAvailable = false;
       setStatus(`${file.name} loaded.`, false, false);
     };
@@ -348,6 +349,7 @@ initViewer({
   toggleMeasureBtn,
   measureReadout,
   toggleOrthoBtn,
+  toggleUpAxisBtn,
   scaleBar,
   scaleLabel
 });
