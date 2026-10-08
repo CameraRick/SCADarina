@@ -22,72 +22,89 @@
 	<div id="top-header" class="toolbar">
 		<div class="toolbar-row">
 			<div class="toolbar-group-left">
-				<label class="btn" title="choose a local SCAD, STL, OBJ or 3MF file to view or edit">open file<input
-						type="file" id="fileInput" accept=".scad,.stl,.obj,.3mf"></label>
+				<label class="btn" title="choose a local SCAD, STL, OBJ, or 3MF file">open file<input type="file"
+						id="fileInput" accept=".scad,.stl,.obj,.3mf"></label>
 				<button id="saveServerBtn" title="save editor contents as a new .scad file to the server">save to
 					/models</button>
 			</div>
 			<div class="toolbar-group-right">
-				<button id="renderBtn" title="compile OpenSCAD code with CGAL to compute full geometry">full
+				<button id="renderBtn" title="compile OpenSCAD code for full quality">full
 					render</button>
 				<button id="downloadBtn" title="download current geometry as binary STL file">export STL</button>
 			</div>
 		</div>
-		<div class="toolbar-row" style="justify-content: flex-end;">
-			<label class="toolbar-checkbox-label"
-				title="save an additional STL copy into /models/_export when exporting">
-				<input type="checkbox" id="saveCopyServerChk">
-				<span>save copy to /models</span>
-			</label>
+		<div class="toolbar-row">
+			<div class="toolbar-group-left">
+				<div class="toolbar-select-label"
+					title="stable: standard OpenSCAD (CGAL)&#10;nightly: OpenSCAD Nightly with Manifold (fast CSG)">
+					<span>render engine</span>
+					<div class="custom-dropdown" id="engineDropdown">
+						<button type="button" class="custom-dropdown-btn" id="engineSelectBtn">
+							<span id="engineSelectLabel">stable</span>
+							<svg class="custom-dropdown-arrow" viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+						</button>
+						<div class="custom-dropdown-menu" id="engineDropdownMenu">
+							<div class="custom-dropdown-item active" data-value="stable">stable</div>
+							<div class="custom-dropdown-item" data-value="nightly">nightly</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="toolbar-group-right">
+				<label class="toolbar-checkbox-label"
+					title="save an additional STL copy into /models/_export when exporting">
+					<input type="checkbox" id="saveCopyServerChk">
+					<span>save copy to /models</span>
+				</label>
+			</div>
 		</div>
 	</div>
 
 	<div id="code-toggle-bar">
 		<button id="toggleParamsBtn" title="toggle parameters and models panel">hide parameters</button>
-		<button id="toggleCodeBtn" title="toggle OpenSCAD source editor panel">show code</button>
+		<button id="toggleCodeBtn" title="toggle OpenSCAD code editor panel">show code</button>
 	</div>
 
 	<div id="sidebar-left">
 		<div id="sidebar-params">
-				<div class="header-bar">
-					<span>| parameters</span>
-					<span id="file-title" style="color: #888888; font-size: 10px; text-transform: none;">standard</span>
-				</div>
-
-				<div id="controls-container">
-					<span style="color:#888888; font-size:11px; padding: 4px;">no parameters detected.</span>
-				</div>
-
-				<div id="models-resizer" title="drag to resize"></div>
-
-				<div id="models-panel">
-					<div class="header-bar">
-						<span id="modelsCurrentPath"
-							style="text-transform: none; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/models</span>
-						<div style="display: flex; align-items: center; gap: 4px;">
-							<label class="file-action-btn" title="upload files directly into this server directory"
-								style="cursor: pointer; margin: 0;">
-								<span class="btn-icon"
-									style="-webkit-mask-image: url(/svg/upload.svg); mask-image: url(/svg/upload.svg);"></span>
-								<input type="file" id="modelsFolderUploadInput" accept=".scad,.stl,.obj,.3mf"
-									style="display: none;">
-							</label>
-							<button id="newFolderBtn" class="file-action-btn" title="create a new directory here">
-								<span class="btn-icon"
-									style="-webkit-mask-image: url(/svg/newfolder.svg); mask-image: url(/svg/newfolder.svg);"></span>
-							</button>
-							<button id="refreshModelsBtn" class="file-action-btn"
-								title="reload folder list from server">
-								<span class="btn-icon"
-									style="-webkit-mask-image: url(/svg/refresh.svg); mask-image: url(/svg/refresh.svg);"></span>
-							</button>
-						</div>
-					</div>
-					<ul id="models-list"></ul>
-				</div>
-				<div id="sidebar-left-resizer" title="drag to resize parameters sidebar"></div>
+			<div class="header-bar">
+				<span>| parameters</span>
+				<span id="file-title" style="color: #888888; font-size: 10px; text-transform: none;">standard</span>
 			</div>
+
+			<div id="controls-container">
+				<span style="color:#888888; font-size:11px; padding: 4px;">no parameters detected.</span>
+			</div>
+
+			<div id="models-resizer" title="drag to resize"></div>
+
+			<div id="models-panel">
+				<div class="header-bar">
+					<span id="modelsCurrentPath"
+						style="text-transform: none; display: flex; align-items: center; gap: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">/models</span>
+					<div style="display: flex; align-items: center; gap: 4px;">
+						<label class="file-action-btn" title="upload files directly into this server directory"
+							style="cursor: pointer; margin: 0;">
+							<span class="btn-icon"
+								style="-webkit-mask-image: url(/svg/upload.svg); mask-image: url(/svg/upload.svg);"></span>
+							<input type="file" id="modelsFolderUploadInput" accept=".scad,.stl,.obj,.3mf"
+								style="display: none;">
+						</label>
+						<button id="newFolderBtn" class="file-action-btn" title="create a new directory here">
+							<span class="btn-icon"
+								style="-webkit-mask-image: url(/svg/newfolder.svg); mask-image: url(/svg/newfolder.svg);"></span>
+						</button>
+						<button id="refreshModelsBtn" class="file-action-btn" title="reload folder list from server">
+							<span class="btn-icon"
+								style="-webkit-mask-image: url(/svg/refresh.svg); mask-image: url(/svg/refresh.svg);"></span>
+						</button>
+					</div>
+				</div>
+				<ul id="models-list"></ul>
+			</div>
+			<div id="sidebar-left-resizer" title="drag to resize parameters sidebar"></div>
 		</div>
+	</div>
 
 	<div id="sidebar-right">
 		<div id="sidebar-right-resizer" title="drag to resize code editor"></div>
@@ -95,8 +112,8 @@
 			<span>| OpenSCAD Code</span>
 		</div>
 		<div id="editor-container">
-				<div id="editor-gutter"></div>
-				<textarea id="editor" spellcheck="false">// teeth count
+			<div id="editor-gutter"></div>
+			<textarea id="editor" spellcheck="false">// teeth count
 teeth = 69; // [10:1:300]
 
 // inner diameter
@@ -305,50 +322,48 @@ gear(
 	involute_facets = involute_facets
 );
 </textarea>
+		</div>
+	</div>
+
+	<div id="viewport-container">
+		<div id="viewport-tools">
+			<div class="tool-group">
+				<button id="modeSolidBtn" title="render solid surface without wireframe">solid</button>
+				<button id="modeEdgesBtn" class="active-mode"
+					title="render solid surface with visible edge lines">edges</button>
+				<button id="modeMeshBtn"
+					title="render solid surface with triangular mesh wireframe overlay">mesh</button>
+				<button id="modeWireframeBtn" title="render triangular mesh wireframe only">wireframe</button>
 			</div>
+
+			<button id="toggleGridBtn" class="active-tool"
+				title="cycle viewport helper: grid / axes / off">grid</button>
+
+			<button id="toggleMeasureBtn" title="click two vertices to measure distance and XYZ deltas">measure</button>
 		</div>
 
-		<div id="viewport-container">
-			<div id="viewport-tools">
-				<div class="tool-group">
-					<button id="modeSolidBtn" title="render solid surface without wireframe">solid</button>
-					<button id="modeEdgesBtn" class="active-mode"
-						title="render solid surface with visible edge lines">edges</button>
-					<button id="modeMeshBtn"
-						title="render solid surface with triangular mesh wireframe overlay">mesh</button>
-					<button id="modeWireframeBtn" title="render triangular mesh wireframe only">wireframe</button>
-				</div>
+		<div id="measure-readout"></div>
+		<div id="status"></div>
 
-				<button id="toggleGridBtn" class="active-tool" title="cycle viewport helper: grid / axes / off">grid</button>
+		<div id="scale-indicator">
+			<div id="scale-bar"></div>
+			<div id="scale-label">—</div>
+		</div>
 
-				<button id="toggleMeasureBtn"
-					title="click two vertices to measure distance and XYZ deltas">measure</button>
+		<div id="viewcube-wrap">
+			<div id="viewcube-box">
+				<canvas id="viewcube-canvas" title="click face, edge, or corner to snap view"></canvas>
+				<button id="vc-arrow-up" class="vc-arrow vc-arrow-up" title="tilt up">▲</button>
+				<button id="vc-arrow-down" class="vc-arrow vc-arrow-down" title="tilt down">▼</button>
+				<button id="vc-arrow-left" class="vc-arrow vc-arrow-left" title="turn left">◀</button>
+				<button id="vc-arrow-right" class="vc-arrow vc-arrow-right" title="turn right">▶</button>
 			</div>
-
-			<div id="measure-readout"></div>
-			<div id="status"></div>
-
-			<div id="scale-indicator">
-				<div id="scale-bar"></div>
-				<div id="scale-label">—</div>
-			</div>
-
-			<div id="viewcube-wrap">
-				<div id="viewcube-box">
-					<canvas id="viewcube-canvas" title="click face, edge, or corner to snap view"></canvas>
-					<button id="vc-arrow-up" class="vc-arrow vc-arrow-up" title="tilt up">▲</button>
-					<button id="vc-arrow-down" class="vc-arrow vc-arrow-down" title="tilt down">▼</button>
-					<button id="vc-arrow-left" class="vc-arrow vc-arrow-left" title="turn left">◀</button>
-					<button id="vc-arrow-right" class="vc-arrow vc-arrow-right" title="turn right">▶</button>
-				</div>
-				<div id="viewcube-sub">
-					<button id="toggleOrthoBtn"
-						title="toggle orthographic / perspective projection">perspective</button>
-					<button id="toggleUpAxisBtn"
-						title="toggle up-axis: Z is up / Y is up">Z is up</button>
-				</div>
+			<div id="viewcube-sub">
+				<button id="toggleOrthoBtn" title="toggle orthographic / perspective projection">perspective</button>
+				<button id="toggleUpAxisBtn" title="toggle up-axis: Z is up / Y is up">Z is up</button>
 			</div>
 		</div>
+	</div>
 
 	<script type="module" src="/static/js/app.js"></script>
 </body>
