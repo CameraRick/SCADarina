@@ -119,6 +119,105 @@ body {
   align-items: center;
 }
 
+.custom-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.custom-dropdown-btn {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #2a2a2a;
+  color: #ffffff;
+  border: 1px solid #3d3d3d;
+  padding: 5px 6px 5px 10px;
+  cursor: pointer;
+  border-radius: 2px;
+  font-weight: 700;
+  font-size: 11px;
+  outline: none;
+  user-select: none;
+  line-height: normal;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 72px;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.custom-dropdown-btn:hover {
+  background-color: #f09c2a !important;
+  border-color: #f09c2a !important;
+  color: #141414 !important;
+}
+
+.custom-dropdown-arrow {
+  width: 10px;
+  height: 10px;
+  display: block;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.custom-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  min-width: 100%;
+  background-color: #252525;
+  border: 1px solid #3d3d3d;
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.custom-dropdown.open .custom-dropdown-menu {
+  display: block;
+}
+
+.custom-dropdown-item {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  background: transparent;
+  transition: background 0.1s ease, color 0.1s ease;
+}
+
+.custom-dropdown-item:hover {
+  background-color: #f09c2a;
+  color: #141414;
+}
+
+.custom-dropdown-item.active {
+  color: #ffffff;
+  background-color: #2c2c2c;
+}
+
+.custom-dropdown-item.active:hover {
+  background-color: #f09c2a;
+  color: #141414;
+}
+
+.toolbar-select-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 11px;
+  font-size: 11px;
+  color: #aaaaaa;
+  user-select: none;
+  font-family: monospace;
+  font-style: normal;
+  white-space: nowrap;
+}
+
 .toolbar-checkbox-label {
   display: flex;
   align-items: center;
@@ -180,6 +279,59 @@ input[type="checkbox"]:checked::after {
   gap: 6px;
 }
 
+.param-group {
+  background: transparent;
+  border: none;
+  margin-bottom: 4px;
+}
+
+.param-group-summary {
+  padding: 8px 12px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #aaaaaa;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.15s ease;
+}
+
+.param-group-summary:hover {
+  color: #ffffff;
+}
+
+.param-group-summary::before {
+  content: '▸';
+  font-size: 10px;
+  color: #888888;
+  transition: transform 0.15s ease, color 0.15s ease;
+  display: inline-block;
+  line-height: 1;
+}
+
+.param-group[open]>.param-group-summary::before {
+  transform: rotate(90deg);
+  color: #ffffff;
+}
+
+.param-group-summary::-webkit-details-marker {
+  display: none;
+}
+
+.param-group-content {
+  padding: 4px 8px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .param-item {
   background: #252525;
   border: 1px solid #333333;
@@ -218,8 +370,61 @@ input[type="checkbox"]:checked::after {
 
 .param-row input[type="range"] {
   flex: 1.2;
-  accent-color: #f09c2a;
   height: 4px;
+  background: #141414;
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+}
+
+.param-row input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #141414;
+  border-radius: 2px;
+  border: none;
+}
+
+.param-row input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: #141414;
+  border-radius: 2px;
+  border: none;
+}
+
+.param-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f09c2a;
+  cursor: pointer;
+  margin-top: -4px;
+  transition: background-color 0.1s ease;
+}
+
+.param-row input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #f09c2a;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.param-row input[type="range"]:hover::-webkit-slider-thumb,
+.param-row input[type="range"]:active::-webkit-slider-thumb {
+  background: #ffffff;
+}
+
+.param-row input[type="range"]:hover::-moz-range-thumb,
+.param-row input[type="range"]:active::-moz-range-thumb {
+  background: #ffffff;
 }
 
 .param-row input[type="text"] {
@@ -281,24 +486,46 @@ input[type="checkbox"]:checked::after {
   margin: 0 !important;
   border: none !important;
   background-color: #1a1a1a !important;
-  background-repeat: no-repeat !important;
-  background-position: center !important;
-  background-size: 10px 10px !important;
   cursor: pointer;
-  display: block !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.number-stepper .stepper-btn::before {
+  content: '';
+  display: block;
+  width: 10px;
+  height: 10px;
+  background-color: #ffffff;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+.number-stepper .stepper-up {
+  border-bottom: 1px solid #333333 !important;
+}
+
+.number-stepper .stepper-up::before {
+  -webkit-mask-image: url("/svg/chevronUp.svg");
+  mask-image: url("/svg/chevronUp.svg");
+}
+
+.number-stepper .stepper-down::before {
+  -webkit-mask-image: url("/svg/chevronDown.svg");
+  mask-image: url("/svg/chevronDown.svg");
 }
 
 .number-stepper .stepper-btn:hover {
   background-color: #f09c2a !important;
 }
 
-.number-stepper .stepper-up {
-  background-image: url("/svg/chevronUp.svg") !important;
-  border-bottom: 1px solid #333333 !important;
-}
-
-.number-stepper .stepper-down {
-  background-image: url("/svg/chevronDown.svg") !important;
+.number-stepper .stepper-btn:hover::before {
+  background-color: #141414 !important;
 }
 
 .param-row input[type="text"]:focus,
@@ -859,4 +1086,30 @@ button:disabled {
 
 input[type="file"] {
   display: none;
+}
+
+#custom-tooltip {
+  position: fixed;
+  z-index: 10000;
+  pointer-events: none;
+  background-color: #252525;
+  color: #ffffff;
+  border: 1px solid #3d3d3d;
+  border-radius: 2px;
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+  line-height: 1.35;
+  white-space: pre-line;
+  max-width: 320px;
+  box-shadow: none;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+  display: none;
+}
+
+#custom-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
