@@ -25,6 +25,15 @@ export function initModels(elements, callbacks) {
   setStatus = callbacks.setStatus;
   onOpenModel = callbacks.onOpenModel;
 
+  const STORAGE_KEY_MODELS_HEIGHT = 'scadarina_models_panel_height';
+  const savedHeight = localStorage.getItem(STORAGE_KEY_MODELS_HEIGHT);
+  if (savedHeight && modelsPanel) {
+    const parsed = parseInt(savedHeight, 10);
+    if (!isNaN(parsed) && parsed >= 60 && parsed <= (window.innerHeight - 200)) {
+      modelsPanel.style.height = `${parsed}px`;
+    }
+  }
+
   let isResizing = false;
   resizer.addEventListener('mousedown', () => {
     isResizing = true;
@@ -46,6 +55,9 @@ export function initModels(elements, callbacks) {
       isResizing = false;
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
+      if (modelsPanel) {
+        localStorage.setItem(STORAGE_KEY_MODELS_HEIGHT, parseInt(modelsPanel.style.height, 10) || modelsPanel.offsetHeight);
+      }
     }
   });
 
