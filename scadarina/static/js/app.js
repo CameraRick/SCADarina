@@ -62,6 +62,45 @@ const scaleBar = document.getElementById('scale-bar');
 const scaleLabel = document.getElementById('scale-label');
 const fileInput = document.getElementById('fileInput');
 
+const engineDropdown = document.getElementById('engineDropdown');
+const engineSelectBtn = document.getElementById('engineSelectBtn');
+const engineSelectLabel = document.getElementById('engineSelectLabel');
+const engineDropdownMenu = document.getElementById('engineDropdownMenu');
+const STORAGE_KEY_ENGINE = 'scadarina_engine';
+let selectedEngine = 'stable';
+
+if (engineDropdown && engineSelectBtn && engineSelectLabel && engineDropdownMenu) {
+  const savedEngine = localStorage.getItem(STORAGE_KEY_ENGINE);
+  if (savedEngine && (savedEngine === 'stable' || savedEngine === 'nightly')) {
+    selectedEngine = savedEngine;
+    engineSelectLabel.textContent = selectedEngine;
+    engineDropdownMenu.querySelectorAll('.custom-dropdown-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.value === selectedEngine);
+    });
+  }
+
+  engineSelectBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    engineDropdown.classList.toggle('open');
+  });
+
+  engineDropdownMenu.querySelectorAll('.custom-dropdown-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectedEngine = item.dataset.value;
+      engineSelectLabel.textContent = selectedEngine;
+      localStorage.setItem(STORAGE_KEY_ENGINE, selectedEngine);
+      engineDropdownMenu.querySelectorAll('.custom-dropdown-item').forEach(el => el.classList.remove('active'));
+      item.classList.add('active');
+      engineDropdown.classList.remove('open');
+    });
+  });
+
+  window.addEventListener('click', () => {
+    engineDropdown.classList.remove('open');
+  });
+}
+
 // State
 let loadedFileName = 'model';
 let isFullRenderAvailable = false;
@@ -106,13 +145,15 @@ export async function triggerRun(isPreview = false) {
   const code = getCode();
 
   try {
+    const chosenEngine = selectedEngine || 'stable';
     const res = await fetch('/render', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         code: code,
         params: getCurrentParameters(),
-        preview: isPreview
+        preview: isPreview,
+        engine: chosenEngine
       })
     });
 
@@ -385,7 +426,6 @@ toggleParamsBtn.addEventListener('click', () => {
     sidebarLeft.style.removeProperty('width');
   }
   toggleParamsBtn.textContent = isCollapsed ? 'show parameters' : 'hide parameters';
-  toggleParamsBtn.title = isCollapsed ? 'show parameters' : 'hide parameters';
   onResize();
   setTimeout(onResize, 160);
 });
@@ -448,11 +488,83 @@ function alignCodeToggleBar() {
   }
 }
 
+// Custom Tooltips System matching SCADarina design
+function initTooltips() {
+  const tooltip = document.createElement('div');
+  tooltip.id = 'custom-tooltip';
+  document.body.appendChild(tooltip);
+
+  let currentTarget = null;
+  let showTimeout = null;
+
+  document.addEventListener('mouseover', (e) => {
+    const el = e.target.closest('[title], [data-tooltip]');
+    if (!el) return;
+
+    if (el.hasAttribute('title')) {
+      const text = el.getAttribute('title');
+      if (text) {
+        el.setAttribute('data-tooltip', text);
+        el.removeAttribute('title');
+      }
+    }
+
+    const text = el.getAttribute('data-tooltip');
+    if (!text) return;
+
+    currentTarget = el;
+    tooltip.textContent = text;
+
+    clearTimeout(showTimeout);
+    showTimeout = setTimeout(() => {
+      if (currentTarget !== el) return;
+      tooltip.style.display = 'block';
+
+      const rect = el.getBoundingClientRect();
+      const tipRect = tooltip.getBoundingClientRect();
+
+      let left = rect.left + (rect.width - tipRect.width) / 2;
+      let top = rect.bottom + 6;
+
+      if (left < 6) left = 6;
+      if (left + tipRect.width > window.innerWidth - 6) {
+        left = window.innerWidth - tipRect.width - 6;
+      }
+      if (top + tipRect.height > window.innerHeight - 6) {
+        top = rect.top - tipRect.height - 6;
+      }
+
+      tooltip.style.left = `${Math.round(left)}px`;
+      tooltip.style.top = `${Math.round(top)}px`;
+      tooltip.classList.add('visible');
+    }, 600);
+  });
+
+  document.addEventListener('mouseout', (e) => {
+    if (!currentTarget) return;
+    if (e.target.closest('[data-tooltip]') === currentTarget) {
+      clearTimeout(showTimeout);
+      currentTarget = null;
+      tooltip.classList.remove('visible');
+      tooltip.style.display = 'none';
+    }
+  });
+
+  window.addEventListener('scroll', () => {
+    if (currentTarget) {
+      tooltip.classList.remove('visible');
+      tooltip.style.display = 'none';
+      currentTarget = null;
+    }
+  }, true);
+}
+
 // Initial bootstrap
 loadServerModels();
 parseParameters();
 triggerRun(true);
 alignCodeToggleBar();
+initTooltips();
 window.addEventListener('resize', alignCodeToggleBar);
 if (document.fonts && document.fonts.ready) {
   document.fonts.ready.then(alignCodeToggleBar);
