@@ -48,7 +48,6 @@ export function initEditor(elements, callbacks) {
       sidebarRight.style.width = '';
     }
     toggleCodeBtn.textContent = isOpen ? 'hide code' : 'show code';
-    toggleCodeBtn.title = isOpen ? 'hide code' : 'show code';
     if (onResizeCb) {
       setTimeout(onResizeCb, 160);
     }
@@ -168,18 +167,60 @@ export function parseParameters() {
   let detected = 0;
   let isHiddenSection = false;
 
+  let inBlockComment = false;
+  let currentGroupContent = controlsContainer;
+
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim();
+    const rawLine = lines[i];
+    const line = rawLine.trim();
     if (!line) continue;
-    if (line.startsWith('/*') && /\[hidden\]/i.test(line)) {
+
+    // OpenSCAD Customizer: /* [Hidden] */ or /*Hidden*/ marks everything after as hidden
+    if (/\/\*\s*\[?hidden\]?\s*\*\//i.test(line)) {
       isHiddenSection = true;
       continue;
     }
-    if (line.startsWith('/*') && !/\[hidden\]/i.test(line)) {
-      isHiddenSection = false;
+
+    // Handle multiline comments
+    if (inBlockComment) {
+      if (line.includes('*/')) {
+        inBlockComment = false;
+      }
       continue;
     }
-    if (line.startsWith('//') || line.startsWith('/*')) continue;
+    if (line.startsWith('/*')) {
+      if (!line.includes('*/')) {
+        inBlockComment = true;
+      }
+      // Section header /* [Tab Name] */ - check if it's not hidden
+      const tabMatch = line.match(/\/\*\s*\[([^\]]+)\]\s*\*\//);
+      if (tabMatch) {
+        const tabTitle = tabMatch[1].trim();
+        if (/hidden/i.test(tabTitle)) {
+          isHiddenSection = true;
+        } else {
+          isHiddenSection = false;
+          const groupDetails = document.createElement('details');
+          groupDetails.className = 'param-group';
+
+          const groupSummary = document.createElement('summary');
+          groupSummary.className = 'param-group-summary';
+          groupSummary.textContent = tabTitle;
+
+          const groupContent = document.createElement('div');
+          groupContent.className = 'param-group-content';
+
+          groupDetails.appendChild(groupSummary);
+          groupDetails.appendChild(groupContent);
+          controlsContainer.appendChild(groupDetails);
+
+          currentGroupContent = groupContent;
+        }
+      }
+      continue;
+    }
+
+    if (line.startsWith('//')) continue;
     if (isHiddenSection) continue;
 
     const match = line.match(/^([a-zA-Z0-9_]+)\s*=\s*([^;]+)\s*;\s*(?:\/\/)?\s*(.*)?$/);
@@ -247,6 +288,13 @@ export function parseParameters() {
     } else if (/^(true|false)$/i.test(rawVal)) {
       type = 'bool';
       initialVal = rawVal.toLowerCase() === 'true';
+    } else if (rawVal.startsWith('[') && rawVal.endsWith(']')) {
+      type = 'vector';
+      try {
+        initialVal = JSON.parse(rawVal);
+      } catch (e) {
+        initialVal = rawVal;
+      }
     } else if (!isNaN(parseFloat(rawVal)) && isFinite(rawVal)) {
       type = 'number';
       initialVal = parseFloat(rawVal);
@@ -371,6 +419,55 @@ export function parseParameters() {
         if (onParamChange) onParamChange();
       });
       row.appendChild(createStepper(numInput));
+    } else if (type === 'vector') {
+      if (Array.isArray(initialVal) && initialVal.every(item => typeof item === 'number')) {
+        const vecContainer = document.createElement('div');
+        vecContainer.style.display = 'flex';
+        vecContainer.style.gap = '4px';
+        vecContainer.style.flexWrap = 'wrap';
+
+        const inputs = [];
+        initialVal.forEach((num, idx) => {
+          const numInput = document.createElement('input');
+          numInput.type = 'number';
+          numInput.value = num;
+          const stepMatch = comment.match(/^([0-9.]+)/);
+          numInput.step = stepMatch ? stepMatch[1] : 'any';
+
+          numInput.addEventListener('input', () => {
+            const currentArr = inputs.map(inp => parseFloat(inp.value) || 0);
+            currentParameters[varName] = currentArr;
+            updateCodeText(varName, `[${currentArr.join(', ')}]`);
+          });
+          numInput.addEventListener('change', () => {
+            if (onParamChange) onParamChange();
+          });
+
+          inputs.push(numInput);
+          vecContainer.appendChild(createStepper(numInput));
+        });
+
+        row.appendChild(vecContainer);
+      } else {
+        const textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.style.flex = '1.2';
+        textInput.style.width = 'auto';
+        textInput.value = typeof initialVal === 'string' ? initialVal : JSON.stringify(initialVal);
+        textInput.addEventListener('input', () => {
+          const raw = textInput.value.trim();
+          try {
+            currentParameters[varName] = JSON.parse(raw);
+          } catch (e) {
+            currentParameters[varName] = raw;
+          }
+          updateCodeText(varName, raw);
+        });
+        textInput.addEventListener('change', () => {
+          if (onParamChange) onParamChange();
+        });
+        row.appendChild(textInput);
+      }
     } else if (type === 'string') {
       const textInput = document.createElement('input');
       textInput.type = 'text';
@@ -389,7 +486,7 @@ export function parseParameters() {
     }
 
     item.appendChild(row);
-    controlsContainer.appendChild(item);
+    currentGroupContent.appendChild(item);
   }
 
   if (detected === 0) {
