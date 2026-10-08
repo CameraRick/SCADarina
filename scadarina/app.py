@@ -4,7 +4,7 @@ import uuid
 import json
 from flask import Flask, request, jsonify, send_file, render_template, send_from_directory
 
-APP_VERSION = "1.1"
+APP_VERSION = "1.2"
 
 app = Flask(__name__)
 
@@ -209,7 +209,7 @@ def render_scad():
     with open(scad_path, "w", encoding="utf-8") as f:
         f.write(code)
 
-    version_mode = os.environ.get("OPENSCAD_VERSION", "stable").strip().lower()
+    version_mode = data.get('engine', '').strip().lower() or os.environ.get("OPENSCAD_VERSION", "stable").strip().lower()
     if version_mode == "nightly" and os.path.exists("/usr/bin/openscad-nightly"):
         cmd = ["openscad-nightly", "--enable=manifold", scad_path, "-o", stl_path]
     elif version_mode == "nightly" and os.path.exists("/usr/local/bin/openscad-nightly"):
@@ -217,32 +217,23 @@ def render_scad():
     else:
         cmd = ["openscad", scad_path, "-o", stl_path]
 
-    for k, v in params.items():
-        if isinstance(v, bool):
-            val_str = "true" if v else "false"
-        elif isinstance(v, (int, float)):
-            val_str = str(v)
-        elif isinstance(v, str):
-            val_str = f'"{v}"'
-        else:
-            val_str = json.dumps(v)
-        cmd.extend(["-D", f"{k}={val_str}"])
-
     if is_preview:
         cmd.extend([
             "-D", "$fs=4.0",
             "-D", "$fa=20.0",
             "-D", "$fn=12"
         ])
-        cmd.extend(["--preview"])
 
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     if os.path.exists(scad_path):
         os.remove(scad_path)
 
-    if result.returncode != 0:
-        return jsonify({'error': result.stderr or 'OpenSCAD error'}), 500
+    stl_generated = os.path.exists(stl_path) and os.path.getsize(stl_path) > 0
+
+    if not stl_generated:
+        err_msg = result.stderr.strip() or result.stdout.strip() or 'OpenSCAD failed to generate STL'
+        return jsonify({'error': err_msg}), 500
 
     return send_file(stl_path, mimetype='application/sla', as_attachment=False)
 
